@@ -1,1 +1,4 @@
 .vscode
+openapitools.json
+_postgres
+*.session.sql
