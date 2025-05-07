@@ -4,7 +4,6 @@ import (
 	"AvitoTechPVZ/codegen/dto"
 	"AvitoTechPVZ/repo"
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 )
@@ -24,20 +23,30 @@ type DefaultAPIServicer interface {
 */
 
 type DefaultAPIServicerImpl struct {
-	Users repo.UserRepo
+	Repo repo.Repo
+}
+
+var allowedRoles = map[string]bool{
+	"moderator": true,
+	"client":    true,
+}
+
+type errMessage struct {
+	Message string `json:"message"`
 }
 
 func (s *DefaultAPIServicerImpl) DummyLoginPost(ctx context.Context, r dto.DummyLoginPostRequest) (dto.ImplResponse, error) {
 	// Implement your business logic here
-
-	// TODO: change handler to do actual thing
-	users, err := s.Users.All()
-	if err != nil {
-		panic(err)
+	if _, ok := allowedRoles[r.Role]; !ok {
+		msg := errMessage{Message: "Invalid role!"}
+		return dto.Response(http.StatusBadRequest, msg), nil
 	}
 
+	userClaims := NewDummyUser(r.Role)
+	token := userClaims.GenerateJwtToken()
+
 	return dto.ImplResponse{
-		Body: fmt.Sprint(users),
+		Body: token,
 		Code: http.StatusOK,
 	}, nil
 }

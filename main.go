@@ -16,8 +16,10 @@ func main() {
 	router := mux.NewRouter()
 
 	// Create service implementation
+	db := repo.OpenDbConnection()
+	repo := repo.NewRepo(db)
 	s := &service.DefaultAPIServicerImpl{
-		Users: repo.UserRepo{DB: repo.OpenDbConnection()},
+		Repo: repo,
 	}
 
 	// Create controller
@@ -27,7 +29,7 @@ func main() {
 	for _, route := range controller.Routes() {
 		var h http.HandlerFunc
 		if !strings.Contains(route.Pattern, "Login") {
-			h = service.AuthMiddleware(route.HandlerFunc)
+			h = service.AuthMiddleware(route.HandlerFunc, []string{"moderator"})
 		} else {
 			h = route.HandlerFunc
 		}

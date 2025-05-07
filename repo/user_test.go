@@ -12,8 +12,8 @@ func TestUserRepoAdd(t *testing.T) {
 	newUser := User{
 		Id:       uuid.New(),
 		RoleId:   roleId,
-		Email:    "be11a@yandex.ru",
-		Password: "thebestgirl",
+		Email:    "nickvasky@gmail.com",
+		Password: "testPass",
 	}
 	err := ur.Add(newUser)
 	if err != nil {
