@@ -4,8 +4,11 @@ import (
 	"AvitoTechPVZ/codegen/dto"
 	"AvitoTechPVZ/repo"
 	"context"
+	"log"
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 /*
@@ -73,8 +76,43 @@ func (s *DefaultAPIServicerImpl) PvzGet(ctx context.Context, startDate time.Time
 }
 
 func (s *DefaultAPIServicerImpl) PvzPost(ctx context.Context, pvz dto.Pvz) (dto.ImplResponse, error) {
+	pvzId, err := uuid.Parse(pvz.Id)
+	if err != nil {
+		msg := errMessage{Message: "ID isn't a valid UUID!"}
+		return dto.Response(http.StatusBadRequest, msg), nil
+	}
+
+	log.Println("Requested city: ", pvz.City)
+	city, err := s.Repo.Cities.GetByName(pvz.City)
+	if err != nil {
+		log.Println(err)
+		msg := errMessage{Message: "Invalid city!"}
+		return dto.Response(http.StatusBadRequest, msg), nil
+	}
+
+	_, err = s.Repo.Pvzs.GetById(pvzId)
+	if err == nil {
+		log.Println(err)
+		msg := errMessage{Message: "PVZ with such Id already exists!"}
+		return dto.Response(http.StatusBadRequest, msg), nil
+	}
+
+	_, err = s.Repo.Pvzs.Add(pvzId, city.Id, pvz.RegistrationDate)
+
+	if err != nil {
+		msg := errMessage{Message: "Error!"}
+		return dto.Response(http.StatusInternalServerError, msg), nil
+	}
+
+	newPvz, err := s.Repo.Pvzs.GetById(pvzId)
+
+	if err != nil {
+		msg := errMessage{Message: "Error!"}
+		return dto.Response(http.StatusInternalServerError, msg), nil
+	}
+
 	return dto.ImplResponse{
-		Body: "pvz (post)",
+		Body: newPvz,
 		Code: http.StatusOK,
 	}, nil
 }

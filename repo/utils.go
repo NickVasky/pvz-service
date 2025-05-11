@@ -1,20 +1,15 @@
 package repo
 
 import (
+	cfg "AvitoTechPVZ/config"
 	"database/sql"
 	"fmt"
 
+	sq "github.com/Masterminds/squirrel"
 	_ "github.com/lib/pq"
 )
 
-// I know it's awful. TODO: read it from env at least
-var (
-	DbHost     = "localhost"
-	DbPort     = 25913
-	DbUsername = "avitopvz"
-	DbPassword = "test"
-	DbName     = "db_pvz"
-)
+var psq = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 type Repo struct {
 	Users        UserRepo
@@ -22,6 +17,7 @@ type Repo struct {
 	Cities       CityRepo
 	Statuses     StatusRepo
 	ProductTypes ProductTypeRepo
+	Pvzs         PvzRepo
 }
 
 func NewRepo(db *sql.DB) Repo {
@@ -31,13 +27,14 @@ func NewRepo(db *sql.DB) Repo {
 		Cities:       CityRepo{DB: db},
 		Statuses:     StatusRepo{DB: db},
 		ProductTypes: ProductTypeRepo{DB: db},
+		Pvzs:         PvzRepo{DB: db},
 	}
 }
 
-func OpenDbConnection() *sql.DB {
+func OpenDbConnection(cfg cfg.DbConfig) *sql.DB {
 	connectionString := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		DbHost, DbPort, DbUsername, DbPassword, DbName)
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DbName, cfg.DbSslMode)
 
 	db, err := sql.Open("postgres", connectionString)
 	if err != nil {

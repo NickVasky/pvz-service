@@ -31,7 +31,7 @@ var usersTable = usersTableSchema{
 }
 
 func (repo UserRepo) All() ([]User, error) {
-	sql, _, _ := sq.Select("*").From(usersTable.name).ToSql()
+	sql, _, _ := psq.Select("*").From(usersTable.name).ToSql()
 
 	rows, err := repo.DB.Query(sql)
 
@@ -65,7 +65,7 @@ func (repo UserRepo) All() ([]User, error) {
 }
 
 func (repo UserRepo) Add(u User) error {
-	sql, args, _ := sq.
+	sql, args, _ := psq.
 		Insert(usersTable.name).
 		Columns(
 			usersTable.idCol,
@@ -77,7 +77,6 @@ func (repo UserRepo) Add(u User) error {
 			u.RoleId,
 			u.Email,
 			u.Password).
-		PlaceholderFormat(sq.Dollar).
 		ToSql()
 
 	_, err := repo.DB.Exec(sql, args...)
@@ -89,11 +88,10 @@ func (repo UserRepo) Add(u User) error {
 }
 
 func (repo UserRepo) GetById(id uuid.UUID) (User, error) {
-	sql, args, _ := sq.
+	sql, args, _ := psq.
 		Select("*").
 		From(usersTable.name).
 		Where(sq.Eq{usersTable.idCol: id}).
-		PlaceholderFormat(sq.Dollar).
 		ToSql()
 
 	row := repo.DB.QueryRow(sql, args...)
@@ -110,11 +108,10 @@ func (repo UserRepo) GetById(id uuid.UUID) (User, error) {
 }
 
 func (repo UserRepo) GetByEmail(email string) (User, error) {
-	sql, args, _ := sq.
+	sql, args, _ := psq.
 		Select("*").
 		From(usersTable.name).
 		Where(sq.Eq{usersTable.emailCol: email}).
-		PlaceholderFormat(sq.Dollar).
 		ToSql()
 
 	row := repo.DB.QueryRow(sql, args...)
