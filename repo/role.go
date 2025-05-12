@@ -27,7 +27,7 @@ var rolesTable = rolesTableSchema{
 	nameCol: "name",
 }
 
-func (repo RoleRepo) GetByName(roleName string) (Role, error) {
+func (repo *RoleRepo) GetByName(roleName string) (Role, error) {
 	sql, args, _ := sq.
 		Select("*").
 		From(rolesTable.name).
@@ -45,7 +45,7 @@ func (repo RoleRepo) GetByName(roleName string) (Role, error) {
 	return role, err
 }
 
-func (repo RoleRepo) GetById(id uuid.UUID) (Role, error) {
+func (repo *RoleRepo) GetById(id uuid.UUID) (Role, error) {
 	sql, args, _ := sq.
 		Select("*").
 		From(rolesTable.name).

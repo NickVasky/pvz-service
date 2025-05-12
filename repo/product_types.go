@@ -27,7 +27,7 @@ var productTypesTable = productTypesTableSchema{
 	nameCol: "name",
 }
 
-func (repo ProductTypeRepo) GetByName(productTypeName string) (ProductType, error) {
+func (repo *ProductTypeRepo) GetByName(productTypeName string) (ProductType, error) {
 	sql, args, _ := sq.
 		Select("*").
 		From(productTypesTable.name).
@@ -45,7 +45,7 @@ func (repo ProductTypeRepo) GetByName(productTypeName string) (ProductType, erro
 	return productType, err
 }
 
-func (repo ProductTypeRepo) GetById(id uuid.UUID) (ProductType, error) {
+func (repo *ProductTypeRepo) GetById(id uuid.UUID) (ProductType, error) {
 	sql, args, _ := sq.
 		Select("*").
 		From(productTypesTable.name).

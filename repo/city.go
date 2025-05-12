@@ -27,7 +27,7 @@ var citiesTable = citiesTableSchema{
 	nameCol: "name",
 }
 
-func (repo CityRepo) GetByName(cityName string) (City, error) {
+func (repo *CityRepo) GetByName(cityName string) (City, error) {
 	sql, args, _ := sq.
 		Select("*").
 		From(citiesTable.name).
@@ -45,7 +45,7 @@ func (repo CityRepo) GetByName(cityName string) (City, error) {
 	return city, err
 }
 
-func (repo CityRepo) GetById(id uuid.UUID) (City, error) {
+func (repo *CityRepo) GetById(id uuid.UUID) (City, error) {
 	sql, args, _ := sq.
 		Select("*").
 		From(citiesTable.name).

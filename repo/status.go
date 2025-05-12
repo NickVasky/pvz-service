@@ -27,7 +27,7 @@ var statusesTable = statusesTableSchema{
 	nameCol: "name",
 }
 
-func (repo StatusRepo) GetByName(statusName string) (Status, error) {
+func (repo *StatusRepo) GetByName(statusName string) (Status, error) {
 	sql, args, _ := sq.
 		Select("*").
 		From(statusesTable.name).
@@ -45,7 +45,7 @@ func (repo StatusRepo) GetByName(statusName string) (Status, error) {
 	return status, err
 }
 
-func (repo StatusRepo) GetById(id uuid.UUID) (Status, error) {
+func (repo *StatusRepo) GetById(id uuid.UUID) (Status, error) {
 	sql, args, _ := sq.
 		Select("*").
 		From(statusesTable.name).

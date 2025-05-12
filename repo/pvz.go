@@ -31,7 +31,7 @@ var tbl = pvzsTableSchema{
 	registrationDate: "registration_date",
 }
 
-func (repo PvzRepo) Add(pvzId, cityID uuid.UUID, registrationDate time.Time) (uuid.UUID, error) {
+func (repo *PvzRepo) Add(pvzId, cityID uuid.UUID, registrationDate time.Time) (uuid.UUID, error) {
 	insertQuery := psq.
 		Insert(tblName).
 		Columns(

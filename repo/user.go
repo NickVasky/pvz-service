@@ -30,7 +30,7 @@ var usersTable = usersTableSchema{
 	passwordCol: "password",
 }
 
-func (repo UserRepo) All() ([]User, error) {
+func (repo *UserRepo) All() ([]User, error) {
 	sql, _, _ := psq.Select("*").From(usersTable.name).ToSql()
 
 	rows, err := repo.DB.Query(sql)
@@ -64,7 +64,7 @@ func (repo UserRepo) All() ([]User, error) {
 	return users, nil
 }
 
-func (repo UserRepo) Add(u User) error {
+func (repo *UserRepo) Add(u User) error {
 	sql, args, _ := psq.
 		Insert(usersTable.name).
 		Columns(
@@ -87,7 +87,7 @@ func (repo UserRepo) Add(u User) error {
 	return nil
 }
 
-func (repo UserRepo) GetById(id uuid.UUID) (User, error) {
+func (repo *UserRepo) GetById(id uuid.UUID) (User, error) {
 	sql, args, _ := psq.
 		Select("*").
 		From(usersTable.name).
@@ -107,7 +107,7 @@ func (repo UserRepo) GetById(id uuid.UUID) (User, error) {
 	return user, err
 }
 
-func (repo UserRepo) GetByEmail(email string) (User, error) {
+func (repo *UserRepo) GetByEmail(email string) (User, error) {
 	sql, args, _ := psq.
 		Select("*").
 		From(usersTable.name).
