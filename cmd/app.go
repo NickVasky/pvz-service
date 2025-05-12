@@ -2,7 +2,7 @@ package main
 
 import (
 	"AvitoTechPVZ/codegen/dto"
-	cfg "AvitoTechPVZ/config"
+	"AvitoTechPVZ/config"
 	"AvitoTechPVZ/repo"
 	"AvitoTechPVZ/service"
 	"fmt"
@@ -16,13 +16,13 @@ import (
 
 func main() {
 	// Get Cfg
-	config, err := cfg.GetConfig()
+	cfg, err := config.GetConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Create service implementation
-	db := repo.OpenDbConnection(config.Db)
+	db := repo.OpenDbConnection(cfg.Db)
 	repo := repo.NewRepo(db)
 	s := &service.DefaultAPIServicerImpl{
 		Repo: repo,
@@ -43,6 +43,6 @@ func main() {
 		router.HandleFunc(route.Pattern, h).Methods(route.Method)
 	}
 
-	addr := fmt.Sprintf(":%v", config.App.Port)
+	addr := fmt.Sprintf(":%v", cfg.App.Port)
 	log.Fatal(http.ListenAndServe(addr, router)) // Fatal убивает процесс и все деферы идут лесом
 }
