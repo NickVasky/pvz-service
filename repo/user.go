@@ -8,30 +8,18 @@ import (
 )
 
 type User struct {
-	Id       uuid.UUID `db:"id"`
-	RoleId   uuid.UUID `db:"role_id"`
-	Email    string    `db:"email"`
-	Password string    `db:"password"`
+	Id       uuid.UUID
+	RoleId   uuid.UUID
+	Email    string
+	Password string
 }
 
 type UserRepo struct {
 	DB *sql.DB
 }
 
-type usersTableSchema struct {
-	name, idCol, roleIdCol, emailCol, passwordCol string
-}
-
-var usersTable = usersTableSchema{
-	name:        "users",
-	idCol:       "id",
-	roleIdCol:   "role_id",
-	emailCol:    "email",
-	passwordCol: "password",
-}
-
 func (repo *UserRepo) All() ([]User, error) {
-	sql, _, _ := psq.Select("*").From(usersTable.name).ToSql()
+	sql, _, _ := psq.Select("*").From("users").ToSql()
 
 	rows, err := repo.DB.Query(sql)
 
@@ -66,12 +54,12 @@ func (repo *UserRepo) All() ([]User, error) {
 
 func (repo *UserRepo) Add(u User) error {
 	sql, args, _ := psq.
-		Insert(usersTable.name).
+		Insert("users").
 		Columns(
-			usersTable.idCol,
-			usersTable.roleIdCol,
-			usersTable.emailCol,
-			usersTable.passwordCol).
+			"id",
+			"role_id",
+			"email",
+			"password").
 		Values(
 			u.Id,
 			u.RoleId,
@@ -90,8 +78,8 @@ func (repo *UserRepo) Add(u User) error {
 func (repo *UserRepo) GetById(id uuid.UUID) (User, error) {
 	sql, args, _ := psq.
 		Select("*").
-		From(usersTable.name).
-		Where(sq.Eq{usersTable.idCol: id}).
+		From("users").
+		Where(sq.Eq{"id": id}).
 		ToSql()
 
 	row := repo.DB.QueryRow(sql, args...)
@@ -110,8 +98,8 @@ func (repo *UserRepo) GetById(id uuid.UUID) (User, error) {
 func (repo *UserRepo) GetByEmail(email string) (User, error) {
 	sql, args, _ := psq.
 		Select("*").
-		From(usersTable.name).
-		Where(sq.Eq{usersTable.emailCol: email}).
+		From("users").
+		Where(sq.Eq{"email": email}).
 		ToSql()
 
 	row := repo.DB.QueryRow(sql, args...)

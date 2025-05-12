@@ -10,34 +10,17 @@ import (
 	"github.com/google/uuid"
 )
 
-// type Pvz struct {
-// 	Id               uuid.UUID
-// 	City             string
-// 	RegistrationDate time.Time
-// }
-
 type PvzRepo struct {
 	DB *sql.DB
 }
 
-type pvzsTableSchema struct {
-	id, cityId, registrationDate string
-}
-
-var tblName = "pvzs"
-var tbl = pvzsTableSchema{
-	id:               "id",
-	cityId:           "city_id",
-	registrationDate: "registration_date",
-}
-
 func (repo *PvzRepo) Add(pvzId, cityID uuid.UUID, registrationDate time.Time) (uuid.UUID, error) {
 	insertQuery := psq.
-		Insert(tblName).
+		Insert("pvzs").
 		Columns(
-			tbl.id,
-			tbl.cityId,
-			tbl.registrationDate).
+			"id",
+			"city_id",
+			"registration_date").
 		Values(
 			pvzId.String(),
 			cityID.String(),
@@ -68,7 +51,7 @@ func (repo *PvzRepo) GetById(id uuid.UUID) (dto.Pvz, error) {
 			"p.id",
 			"c.name",
 			"p.registration_date").
-		From(tblName + " p").
+		From("pvzs p").
 		Join("cities c ON p.city_id = c.id").
 		Where(sq.Eq{"p.id": id.String()}).
 		ToSql()

@@ -9,29 +9,19 @@ import (
 )
 
 type ProductType struct {
-	Id   uuid.UUID `db:"id"`
-	Name string    `db:"name"`
+	Id   uuid.UUID
+	Name string
 }
 
 type ProductTypeRepo struct {
 	DB *sql.DB
 }
 
-type productTypesTableSchema struct {
-	name, idCol, nameCol string
-}
-
-var productTypesTable = productTypesTableSchema{
-	name:    "product_types",
-	idCol:   "id",
-	nameCol: "name",
-}
-
 func (repo *ProductTypeRepo) GetByName(productTypeName string) (ProductType, error) {
 	sql, args, _ := sq.
 		Select("*").
-		From(productTypesTable.name).
-		Where(sq.Eq{productTypesTable.nameCol: productTypeName}).
+		From("product_types").
+		Where(sq.Eq{"name": productTypeName}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 
@@ -48,8 +38,8 @@ func (repo *ProductTypeRepo) GetByName(productTypeName string) (ProductType, err
 func (repo *ProductTypeRepo) GetById(id uuid.UUID) (ProductType, error) {
 	sql, args, _ := sq.
 		Select("*").
-		From(productTypesTable.name).
-		Where(sq.Eq{productTypesTable.idCol: id}).
+		From("product_types").
+		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 

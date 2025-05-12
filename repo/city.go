@@ -9,29 +9,19 @@ import (
 )
 
 type City struct {
-	Id   uuid.UUID `db:"id"`
-	Name string    `db:"name"`
+	Id   uuid.UUID
+	Name string
 }
 
 type CityRepo struct {
 	DB *sql.DB
 }
 
-type citiesTableSchema struct {
-	name, idCol, nameCol string
-}
-
-var citiesTable = citiesTableSchema{
-	name:    "cities",
-	idCol:   "id",
-	nameCol: "name",
-}
-
 func (repo *CityRepo) GetByName(cityName string) (City, error) {
 	sql, args, _ := sq.
 		Select("*").
-		From(citiesTable.name).
-		Where(sq.Eq{citiesTable.nameCol: cityName}).
+		From("cities").
+		Where(sq.Eq{"name": cityName}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 
@@ -48,8 +38,8 @@ func (repo *CityRepo) GetByName(cityName string) (City, error) {
 func (repo *CityRepo) GetById(id uuid.UUID) (City, error) {
 	sql, args, _ := sq.
 		Select("*").
-		From(citiesTable.name).
-		Where(sq.Eq{citiesTable.idCol: id}).
+		From("cities").
+		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 

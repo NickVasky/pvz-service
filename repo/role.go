@@ -9,29 +9,19 @@ import (
 )
 
 type Role struct {
-	Id   uuid.UUID `db:"id"`
-	Name string    `db:"name"`
+	Id   uuid.UUID
+	Name string
 }
 
 type RoleRepo struct {
 	DB *sql.DB
 }
 
-type rolesTableSchema struct {
-	name, idCol, nameCol string
-}
-
-var rolesTable = rolesTableSchema{
-	name:    "users",
-	idCol:   "id",
-	nameCol: "name",
-}
-
 func (repo *RoleRepo) GetByName(roleName string) (Role, error) {
 	sql, args, _ := sq.
 		Select("*").
-		From(rolesTable.name).
-		Where(sq.Eq{rolesTable.nameCol: roleName}).
+		From("users").
+		Where(sq.Eq{"name": roleName}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 
@@ -48,8 +38,8 @@ func (repo *RoleRepo) GetByName(roleName string) (Role, error) {
 func (repo *RoleRepo) GetById(id uuid.UUID) (Role, error) {
 	sql, args, _ := sq.
 		Select("*").
-		From(rolesTable.name).
-		Where(sq.Eq{rolesTable.idCol: id}).
+		From("users").
+		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 

@@ -9,29 +9,19 @@ import (
 )
 
 type Status struct {
-	Id   uuid.UUID `db:"id"`
-	Name string    `db:"name"`
+	Id   uuid.UUID
+	Name string
 }
 
 type StatusRepo struct {
 	DB *sql.DB
 }
 
-type statusesTableSchema struct {
-	name, idCol, nameCol string
-}
-
-var statusesTable = statusesTableSchema{
-	name:    "statuses",
-	idCol:   "id",
-	nameCol: "name",
-}
-
 func (repo *StatusRepo) GetByName(statusName string) (Status, error) {
 	sql, args, _ := sq.
 		Select("*").
-		From(statusesTable.name).
-		Where(sq.Eq{statusesTable.nameCol: statusName}).
+		From("statuses").
+		Where(sq.Eq{"name": statusName}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 
@@ -48,8 +38,8 @@ func (repo *StatusRepo) GetByName(statusName string) (Status, error) {
 func (repo *StatusRepo) GetById(id uuid.UUID) (Status, error) {
 	sql, args, _ := sq.
 		Select("*").
-		From(statusesTable.name).
-		Where(sq.Eq{statusesTable.idCol: id}).
+		From("statuses").
+		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 
