@@ -9,7 +9,8 @@ import (
 )
 
 type City struct {
-	Id   uuid.UUID
+	Id   int
+	Uuid uuid.UUID
 	Name string
 }
 
@@ -30,6 +31,7 @@ func (repo *CityRepo) GetByName(cityName string) (City, error) {
 	city := City{}
 	err := row.Scan(
 		&city.Id,
+		&city.Uuid,
 		&city.Name,
 	)
 	return city, err
@@ -48,6 +50,7 @@ func (repo *CityRepo) GetById(id uuid.UUID) (City, error) {
 	city := City{}
 	err := row.Scan(
 		&city.Id,
+		&city.Uuid,
 		&city.Name,
 	)
 	return city, err

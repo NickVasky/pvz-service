@@ -132,8 +132,39 @@ func (s *DefaultAPIServicerImpl) PvzPvzIdDeleteLastProductPost(ctx context.Conte
 }
 
 func (s *DefaultAPIServicerImpl) ReceptionsPost(ctx context.Context, r dto.ReceptionsPostRequest) (dto.ImplResponse, error) {
+	pvzUUID, err := uuid.Parse(r.PvzId)
+	if err != nil {
+		msg := errMessage{Message: "ID isn't a valid UUID!"}
+		return dto.Response(http.StatusBadRequest, msg), nil
+	}
+
+	_, err = s.Repo.Pvzs.GetById(pvzUUID)
+	if err != nil {
+		log.Println(err)
+		msg := errMessage{Message: "Invalid city!"}
+		return dto.Response(http.StatusBadRequest, msg), nil
+	}
+
+	rc, err := s.Repo.Receptions.GetOpened(pvzUUID)
+	if err == nil && rc.PvzId == r.PvzId {
+		log.Println(err)
+		msg := errMessage{Message: "Reception already opened for PVZ!"}
+		return dto.Response(http.StatusBadRequest, msg), nil
+	}
+
+	newID, err := s.Repo.Receptions.Add(pvzUUID)
+	if err != nil {
+		msg := errMessage{Message: "Error!"}
+		return dto.Response(http.StatusInternalServerError, msg), nil
+	}
+
+	newRc, err := s.Repo.Receptions.GetById(newID)
+	if err != nil {
+		msg := errMessage{Message: "Error!"}
+		return dto.Response(http.StatusInternalServerError, msg), nil
+	}
 	return dto.ImplResponse{
-		Body: "receptions",
+		Body: newRc,
 		Code: http.StatusOK,
 	}, nil
 }

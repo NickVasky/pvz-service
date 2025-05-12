@@ -18,6 +18,7 @@ type Repo struct {
 	Statuses     StatusRepo
 	ProductTypes ProductTypeRepo
 	Pvzs         PvzRepo
+	Receptions   ReceptionsRepo
 }
 
 func NewRepo(db *sql.DB) Repo {
@@ -28,6 +29,7 @@ func NewRepo(db *sql.DB) Repo {
 		Statuses:     StatusRepo{DB: db},
 		ProductTypes: ProductTypeRepo{DB: db},
 		Pvzs:         PvzRepo{DB: db},
+		Receptions:   ReceptionsRepo{DB: db},
 	}
 }
 

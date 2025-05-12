@@ -9,7 +9,8 @@ import (
 )
 
 type Role struct {
-	Id   uuid.UUID
+	Id   int
+	Uuid uuid.UUID
 	Name string
 }
 
@@ -30,6 +31,7 @@ func (repo *RoleRepo) GetByName(roleName string) (Role, error) {
 	role := Role{}
 	err := row.Scan(
 		&role.Id,
+		&role.Uuid,
 		&role.Name,
 	)
 	return role, err
@@ -48,6 +50,7 @@ func (repo *RoleRepo) GetById(id uuid.UUID) (Role, error) {
 	role := Role{}
 	err := row.Scan(
 		&role.Id,
+		&role.Uuid,
 		&role.Name,
 	)
 	return role, err

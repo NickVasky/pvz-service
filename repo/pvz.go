@@ -14,7 +14,7 @@ type PvzRepo struct {
 	DB *sql.DB
 }
 
-func (repo *PvzRepo) Add(pvzId, cityID uuid.UUID, registrationDate time.Time) (uuid.UUID, error) {
+func (repo *PvzRepo) Add(pvzId uuid.UUID, cityID int, registrationDate time.Time) (uuid.UUID, error) {
 	insertQuery := psq.
 		Insert("pvzs").
 		Columns(
@@ -23,7 +23,7 @@ func (repo *PvzRepo) Add(pvzId, cityID uuid.UUID, registrationDate time.Time) (u
 			"registration_date").
 		Values(
 			pvzId.String(),
-			cityID.String(),
+			cityID,
 			registrationDate).
 		Suffix("RETURNING id")
 

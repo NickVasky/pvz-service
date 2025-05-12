@@ -9,7 +9,8 @@ import (
 )
 
 type Status struct {
-	Id   uuid.UUID
+	Id   int
+	Uuid uuid.UUID
 	Name string
 }
 
@@ -30,6 +31,7 @@ func (repo *StatusRepo) GetByName(statusName string) (Status, error) {
 	status := Status{}
 	err := row.Scan(
 		&status.Id,
+		&status.Uuid,
 		&status.Name,
 	)
 	return status, err
@@ -48,6 +50,7 @@ func (repo *StatusRepo) GetById(id uuid.UUID) (Status, error) {
 	status := Status{}
 	err := row.Scan(
 		&status.Id,
+		&status.Uuid,
 		&status.Name,
 	)
 	return status, err

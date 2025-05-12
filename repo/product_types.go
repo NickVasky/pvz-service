@@ -9,7 +9,8 @@ import (
 )
 
 type ProductType struct {
-	Id   uuid.UUID
+	Id   int
+	Uuid uuid.UUID
 	Name string
 }
 
@@ -30,6 +31,7 @@ func (repo *ProductTypeRepo) GetByName(productTypeName string) (ProductType, err
 	productType := ProductType{}
 	err := row.Scan(
 		&productType.Id,
+		&productType.Uuid,
 		&productType.Name,
 	)
 	return productType, err
@@ -48,6 +50,7 @@ func (repo *ProductTypeRepo) GetById(id uuid.UUID) (ProductType, error) {
 	productType := ProductType{}
 	err := row.Scan(
 		&productType.Id,
+		&productType.Uuid,
 		&productType.Name,
 	)
 	return productType, err
