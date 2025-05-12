@@ -1,10 +1,12 @@
 configs:
   psql_init:
-    file: ./config/init.sql
+    file: ./config/01_init.sql
+  psql_init_enums:
+    file: ./config/02_init_enums.sql
 
 volumes:
     postgres:
-  
+
 networks:
   app01:
     driver: bridge
@@ -12,21 +14,23 @@ networks:
 services:
   db:
     image: postgres:17.4
-    restart: always
+    restart: unless-stopped
     container_name: pg_pvz
     env_file:
       - ./config/app.env
     volumes:
-      - ./_postgres:/var/lib/postgresql/data/
+      - postgres:/var/lib/postgresql/data/
     networks:
       - app01
     ports:
       - "25913:5432"
     configs:
       - source: psql_init
-        target: /docker-entrypoint-initdb.d/init.sql
+        target: /docker-entrypoint-initdb.d/01_init.sql
+      - source: psql_init_enums
+        target: /docker-entrypoint-initdb.d/02_init_enums.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgre"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
