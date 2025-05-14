@@ -2,7 +2,6 @@ package repo
 
 import (
 	"AvitoTechPVZ/codegen/dto"
-	"database/sql"
 	"log"
 	"time"
 
@@ -11,7 +10,7 @@ import (
 )
 
 type PvzRepo struct {
-	DB *sql.DB
+	DB iDB
 }
 
 func (repo *PvzRepo) Add(pvzId uuid.UUID, cityID int, registrationDate time.Time) (uuid.UUID, error) {

@@ -1,8 +1,6 @@
 package repo
 
 import (
-	"database/sql"
-
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 )
@@ -15,7 +13,7 @@ type User struct {
 }
 
 type UserRepo struct {
-	DB *sql.DB
+	DB iDB
 }
 
 func (repo *UserRepo) All() ([]User, error) {

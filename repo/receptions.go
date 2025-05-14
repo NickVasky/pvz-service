@@ -2,7 +2,6 @@ package repo
 
 import (
 	"AvitoTechPVZ/codegen/dto"
-	"database/sql"
 	"log"
 	"time"
 
@@ -11,7 +10,7 @@ import (
 )
 
 type ReceptionsRepo struct {
-	DB *sql.DB
+	DB iDB
 }
 
 type ReceptionStatus uint8

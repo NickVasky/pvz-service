@@ -1,7 +1,7 @@
 package repo
 
 import (
-	"database/sql"
+	"log"
 
 	sq "github.com/Masterminds/squirrel"
 
@@ -15,26 +15,42 @@ type ProductType struct {
 }
 
 type ProductTypeRepo struct {
-	DB *sql.DB
+	DB iDB
 }
 
+var productTypesCache = map[string]ProductType{}
+
 func (repo *ProductTypeRepo) GetByName(productTypeName string) (ProductType, error) {
-	sql, args, _ := sq.
+	var pt ProductType
+	pt, ok := productTypesCache[productTypeName]
+	if ok {
+		log.Printf("Found product %v in cache", pt)
+		return pt, nil
+	}
+
+	sql, args, err := sq.
 		Select("*").
 		From("product_types").
 		Where(sq.Eq{"name": productTypeName}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 
+	if err != nil {
+		return pt, err
+	}
 	row := repo.DB.QueryRow(sql, args...)
 
-	productType := ProductType{}
-	err := row.Scan(
-		&productType.Id,
-		&productType.Uuid,
-		&productType.Name,
+	err = row.Scan(
+		&pt.Id,
+		&pt.Uuid,
+		&pt.Name,
 	)
-	return productType, err
+	if err != nil {
+		return pt, err
+	}
+	log.Printf("Found product %v in db, caching...", pt)
+	productTypesCache[pt.Name] = pt
+	return pt, err
 }
 
 func (repo *ProductTypeRepo) GetById(id uuid.UUID) (ProductType, error) {

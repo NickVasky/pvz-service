@@ -1,8 +1,6 @@
 package repo
 
 import (
-	"database/sql"
-
 	sq "github.com/Masterminds/squirrel"
 
 	"github.com/google/uuid"
@@ -15,7 +13,7 @@ type City struct {
 }
 
 type CityRepo struct {
-	DB *sql.DB
+	DB iDB
 }
 
 func (repo *CityRepo) GetByName(cityName string) (City, error) {

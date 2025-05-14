@@ -1,8 +1,6 @@
 package repo
 
 import (
-	"database/sql"
-
 	sq "github.com/Masterminds/squirrel"
 
 	"github.com/google/uuid"
@@ -15,7 +13,7 @@ type Role struct {
 }
 
 type RoleRepo struct {
-	DB *sql.DB
+	DB iDB
 }
 
 func (repo *RoleRepo) GetByName(roleName string) (Role, error) {

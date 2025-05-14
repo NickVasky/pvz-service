@@ -19,6 +19,8 @@ type Repo struct {
 	ProductTypes ProductTypeRepo
 	Pvzs         PvzRepo
 	Receptions   ReceptionsRepo
+	Products     ProductRepo
+	Tx           txController
 }
 
 func NewRepo(db *sql.DB) Repo {
@@ -30,7 +32,19 @@ func NewRepo(db *sql.DB) Repo {
 		ProductTypes: ProductTypeRepo{DB: db},
 		Pvzs:         PvzRepo{DB: db},
 		Receptions:   ReceptionsRepo{DB: db},
+		Products:     ProductRepo{DB: db},
+		Tx:           txController{DB: db},
 	}
+}
+
+type iDB interface {
+	Exec(query string, args ...any) (sql.Result, error)
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
+}
+
+type txController struct {
+	DB *sql.DB
 }
 
 func OpenDbConnection(cfg cfg.DbConfig) *sql.DB {

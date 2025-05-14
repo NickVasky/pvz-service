@@ -4,8 +4,10 @@ import (
 	"AvitoTechPVZ/codegen/dto"
 	"AvitoTechPVZ/repo"
 	"context"
+	"errors"
 	"log"
 	"net/http"
+	"runtime"
 	"time"
 
 	"github.com/google/uuid"
@@ -34,15 +36,30 @@ var allowedRoles = map[string]bool{
 	"client":    true,
 }
 
-type errMessage struct {
+type responseErr struct {
 	Message string `json:"message"`
+	code    int
+	err     error
+}
+
+func (e responseErr) handle() (dto.ImplResponse, error) {
+	pc, _, _, ok := runtime.Caller(1)
+	funcName := "unknown"
+	if ok {
+		funcName = runtime.FuncForPC(pc).Name()
+	}
+	log.Printf("[%s] - Error: %v, Client Error message: %s", funcName, e.err, e.Message)
+
+	return dto.Response(e.code, e), nil
 }
 
 func (s *DefaultAPIServicerImpl) DummyLoginPost(ctx context.Context, r dto.DummyLoginPostRequest) (dto.ImplResponse, error) {
 	// Implement your business logic here
 	if _, ok := allowedRoles[r.Role]; !ok {
-		msg := errMessage{Message: "Invalid role!"}
-		return dto.Response(http.StatusBadRequest, msg), nil
+		return responseErr{
+			Message: "Invalid role!",
+			code:    http.StatusBadRequest,
+		}.handle()
 	}
 
 	userClaims := NewDummyUser(r.Role)
@@ -78,37 +95,50 @@ func (s *DefaultAPIServicerImpl) PvzGet(ctx context.Context, startDate time.Time
 func (s *DefaultAPIServicerImpl) PvzPost(ctx context.Context, pvz dto.Pvz) (dto.ImplResponse, error) {
 	pvzId, err := uuid.Parse(pvz.Id)
 	if err != nil {
-		msg := errMessage{Message: "ID isn't a valid UUID!"}
-		return dto.Response(http.StatusBadRequest, msg), nil
+		return responseErr{
+			Message: "ID isn't a valid UUID!",
+			code:    http.StatusBadRequest,
+			err:     err,
+		}.handle()
 	}
 
 	log.Println("Requested city: ", pvz.City)
 	city, err := s.Repo.Cities.GetByName(pvz.City)
 	if err != nil {
-		log.Println(err)
-		msg := errMessage{Message: "Invalid city!"}
-		return dto.Response(http.StatusBadRequest, msg), nil
+		return responseErr{
+			Message: "Invalid city!",
+			code:    http.StatusBadRequest,
+			err:     err,
+		}.handle()
 	}
 
 	_, err = s.Repo.Pvzs.GetById(pvzId)
 	if err == nil {
-		log.Println(err)
-		msg := errMessage{Message: "PVZ with such Id already exists!"}
-		return dto.Response(http.StatusBadRequest, msg), nil
+		return responseErr{
+			Message: "PVZ with such Id already exists!",
+			code:    http.StatusBadRequest,
+			err:     err,
+		}.handle()
 	}
 
 	_, err = s.Repo.Pvzs.Add(pvzId, city.Id, pvz.RegistrationDate)
 
 	if err != nil {
-		msg := errMessage{Message: "Error!"}
-		return dto.Response(http.StatusInternalServerError, msg), nil
+		return responseErr{
+			Message: "Error!",
+			code:    http.StatusInternalServerError,
+			err:     err,
+		}.handle()
 	}
 
 	newPvz, err := s.Repo.Pvzs.GetById(pvzId)
 
 	if err != nil {
-		msg := errMessage{Message: "Error!"}
-		return dto.Response(http.StatusInternalServerError, msg), nil
+		return responseErr{
+			Message: "Error!",
+			code:    http.StatusInternalServerError,
+			err:     err,
+		}.handle()
 	}
 
 	return dto.ImplResponse{
@@ -134,34 +164,47 @@ func (s *DefaultAPIServicerImpl) PvzPvzIdDeleteLastProductPost(ctx context.Conte
 func (s *DefaultAPIServicerImpl) ReceptionsPost(ctx context.Context, r dto.ReceptionsPostRequest) (dto.ImplResponse, error) {
 	pvzUUID, err := uuid.Parse(r.PvzId)
 	if err != nil {
-		msg := errMessage{Message: "ID isn't a valid UUID!"}
-		return dto.Response(http.StatusBadRequest, msg), nil
+		return responseErr{
+			Message: "ID isn't a valid UUID!",
+			code:    http.StatusBadRequest,
+			err:     err,
+		}.handle()
 	}
 
 	_, err = s.Repo.Pvzs.GetById(pvzUUID)
 	if err != nil {
-		log.Println(err)
-		msg := errMessage{Message: "Invalid city!"}
-		return dto.Response(http.StatusBadRequest, msg), nil
+		return responseErr{
+			Message: "Invalid city!",
+			code:    http.StatusBadRequest,
+			err:     err,
+		}.handle()
 	}
 
 	rc, err := s.Repo.Receptions.GetOpened(pvzUUID)
 	if err == nil && rc.PvzId == r.PvzId {
-		log.Println(err)
-		msg := errMessage{Message: "Reception already opened for PVZ!"}
-		return dto.Response(http.StatusBadRequest, msg), nil
+		return responseErr{
+			Message: "Reception already opened for PVZ!",
+			code:    http.StatusBadRequest,
+			err:     err,
+		}.handle()
 	}
 
 	newID, err := s.Repo.Receptions.Add(pvzUUID)
 	if err != nil {
-		msg := errMessage{Message: "Error!"}
-		return dto.Response(http.StatusInternalServerError, msg), nil
+		return responseErr{
+			Message: "Error!",
+			code:    http.StatusInternalServerError,
+			err:     err,
+		}.handle()
 	}
 
 	newRc, err := s.Repo.Receptions.GetById(newID)
 	if err != nil {
-		msg := errMessage{Message: "Error!"}
-		return dto.Response(http.StatusInternalServerError, msg), nil
+		return responseErr{
+			Message: "Error!",
+			code:    http.StatusInternalServerError,
+			err:     err,
+		}.handle()
 	}
 	return dto.ImplResponse{
 		Body: newRc,
@@ -170,8 +213,51 @@ func (s *DefaultAPIServicerImpl) ReceptionsPost(ctx context.Context, r dto.Recep
 }
 
 func (s *DefaultAPIServicerImpl) ProductsPost(ctx context.Context, r dto.ProductsPostRequest) (dto.ImplResponse, error) {
+	pvzUUID, err := uuid.Parse(r.PvzId)
+	if err != nil {
+		return responseErr{
+			Message: "ID isn't a valid UUID!",
+			code:    http.StatusBadRequest,
+			err:     err,
+		}.handle()
+	}
+
+	productTypeId, err := s.Repo.ProductTypes.GetByName(r.Type)
+	if err != nil {
+		return responseErr{
+			Message: "Invalid product type!",
+			code:    http.StatusBadRequest,
+			err:     err,
+		}.handle()
+	}
+
+	newProductId, err := s.Repo.Tx.AddProductToReception(pvzUUID, productTypeId.Id)
+	if err != nil {
+		if errors.Is(err, repo.ErrNoOpenedReceptions) {
+			return responseErr{
+				Message: err.Error(), //think this errors through
+				code:    http.StatusBadRequest,
+				err:     err,
+			}.handle()
+		}
+		return responseErr{
+			Message: "Error!", //think this errors through
+			code:    http.StatusInternalServerError,
+			err:     err,
+		}.handle()
+	}
+
+	product, err := s.Repo.Products.GetByID(newProductId)
+	if err != nil {
+		return responseErr{
+			Message: "Error!",
+			code:    http.StatusInternalServerError,
+			err:     err,
+		}.handle()
+	}
+
 	return dto.ImplResponse{
-		Body: "products",
+		Body: product,
 		Code: http.StatusOK,
 	}, nil
 }
