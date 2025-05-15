@@ -155,8 +155,32 @@ func (s *DefaultAPIServicerImpl) PvzPvzIdCloseLastReceptionPost(ctx context.Cont
 }
 
 func (s *DefaultAPIServicerImpl) PvzPvzIdDeleteLastProductPost(ctx context.Context, pvzIdParam string) (dto.ImplResponse, error) {
+	pvzUUID, err := uuid.Parse(pvzIdParam)
+	if err != nil {
+		return responseErr{
+			Message: "ID isn't a valid UUID!",
+			code:    http.StatusBadRequest,
+			err:     err,
+		}.handle()
+	}
+	_, err = s.Repo.Tx.DeleteLastAddedProduct(pvzUUID)
+	if err != nil {
+		if errors.Is(err, repo.ErrNoProducts) {
+			return responseErr{
+				Message: err.Error(),
+				code:    http.StatusBadRequest,
+				err:     err,
+			}.handle()
+		}
+		return responseErr{
+			Message: "Error!",
+			code:    http.StatusBadRequest,
+			err:     err,
+		}.handle()
+	}
+
 	return dto.ImplResponse{
-		Body: "DeleteLastProductPost",
+		Body: nil,
 		Code: http.StatusOK,
 	}, nil
 }
