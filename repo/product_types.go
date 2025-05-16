@@ -24,7 +24,7 @@ func (repo *ProductTypeRepo) GetByName(productTypeName string) (ProductType, err
 	var pt ProductType
 	pt, ok := productTypesCache[productTypeName]
 	if ok {
-		log.Printf("Found product %v in cache", pt)
+		log.Printf("Found product type \"%v\" in cache", pt)
 		return pt, nil
 	}
 
@@ -48,7 +48,7 @@ func (repo *ProductTypeRepo) GetByName(productTypeName string) (ProductType, err
 	if err != nil {
 		return pt, err
 	}
-	log.Printf("Found product %v in db, caching...", pt)
+	log.Printf("Found product type \"%v\" in DB, caching...", pt)
 	productTypesCache[pt.Name] = pt
 	return pt, err
 }

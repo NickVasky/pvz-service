@@ -1,0 +1,18 @@
+package repo
+
+type tableNames struct {
+	cities, productTypes, products, pvzs, receptions,
+	roles, sessions, statuses, users string
+}
+
+var tbls = tableNames{
+	cities:       "cities",
+	productTypes: "product_types",
+	products:     "products",
+	pvzs:         "pvzs",
+	receptions:   "receptions",
+	roles:        "roles",
+	sessions:     "sessions",
+	statuses:     "statuses",
+	users:        "users",
+}

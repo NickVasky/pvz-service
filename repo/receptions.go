@@ -155,8 +155,10 @@ func (repo *ReceptionsRepo) getByStatus(pvzID uuid.UUID, status ReceptionStatus)
 		&r.Status)
 
 	if err != nil {
+		log.Println(err)
 		return r, err
 	}
-	log.Println("Pvz found: ", r)
+
+	log.Println("Reception found: ", r)
 	return r, nil
 }

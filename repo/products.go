@@ -110,6 +110,7 @@ func (repo *ProductRepo) GetLastByReception(receptionId uuid.UUID) (dto.Product,
 			"p.reception_id").
 		From("products p").
 		Join("product_types t ON t.id = p.type_id").
+		Where(sq.Eq{"p.reception_id": receptionId.String()}).
 		OrderBy("p.date_time DESC").
 		Limit(1).
 		ToSql()
@@ -130,20 +131,10 @@ func (repo *ProductRepo) GetLastByReception(receptionId uuid.UUID) (dto.Product,
 		&p.ReceptionId)
 
 	if err != nil {
+		log.Println(err)
 		return p, err
 	}
 
 	log.Println("Product found: ", p)
 	return p, err
 }
-
-// func (repo *ProductRepo) AddTx() error {
-// 	tx, err := repo.DB.Begin()
-// 	txProductsRepo := ProductRepo{DB: tx}
-// 	txReceptionsRepo := ReceptionsRepo{DB: tx}
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }

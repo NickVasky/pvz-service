@@ -4,6 +4,7 @@ import (
 	"AvitoTechPVZ/codegen/dto"
 	"AvitoTechPVZ/repo"
 	"context"
+	"database/sql"
 	"errors"
 	"log"
 	"net/http"
@@ -148,8 +149,66 @@ func (s *DefaultAPIServicerImpl) PvzPost(ctx context.Context, pvz dto.Pvz) (dto.
 }
 
 func (s *DefaultAPIServicerImpl) PvzPvzIdCloseLastReceptionPost(ctx context.Context, pvzIdParam string) (dto.ImplResponse, error) {
+	pvzId, err := uuid.Parse(pvzIdParam)
+	if err != nil {
+		return responseErr{
+			Message: "ID isn't a valid UUID!",
+			code:    http.StatusBadRequest,
+			err:     err,
+		}.handle()
+	}
+
+	reception, err := s.Repo.Receptions.GetOpened(pvzId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return responseErr{
+				Message: "No opened receptions",
+				code:    http.StatusBadRequest,
+				err:     err,
+			}.handle()
+		}
+		return responseErr{
+			Message: "Error!",
+			code:    http.StatusInternalServerError,
+			err:     err,
+		}.handle()
+	}
+	receptionId := uuid.MustParse(reception.Id)
+	_, err = s.Repo.Products.GetLastByReception(receptionId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return responseErr{
+				Message: "No products in reception yet",
+				code:    http.StatusBadRequest,
+				err:     err,
+			}.handle()
+		}
+		return responseErr{
+			Message: "Error!",
+			code:    http.StatusInternalServerError,
+			err:     err,
+		}.handle()
+	}
+	err = s.Repo.Receptions.Close(receptionId)
+	if err != nil {
+		return responseErr{
+			Message: "Error!",
+			code:    http.StatusInternalServerError,
+			err:     err,
+		}.handle()
+	}
+
+	reception, err = s.Repo.Receptions.GetById(receptionId)
+	if err != nil {
+		return responseErr{
+			Message: "Error!",
+			code:    http.StatusInternalServerError,
+			err:     err,
+		}.handle()
+	}
+
 	return dto.ImplResponse{
-		Body: "CloseLastReceptionPost",
+		Body: reception,
 		Code: http.StatusOK,
 	}, nil
 }
