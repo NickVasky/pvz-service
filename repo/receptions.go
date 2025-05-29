@@ -20,6 +20,14 @@ const (
 	Closed     ReceptionStatus = 2
 )
 
+var baseReceptionsSelector = psq.Select(
+	"r.id",
+	"r.date_time",
+	"r.pvz_id",
+	"s.name").
+	From("receptions r").
+	Join("statuses s ON r.status_id = s.id")
+
 func (s ReceptionStatus) String() string {
 	switch s {
 	case InProgress:
@@ -83,15 +91,8 @@ func (repo *ReceptionsRepo) Close(receptionID uuid.UUID) error {
 }
 
 func (repo *ReceptionsRepo) GetById(ID uuid.UUID) (dto.Reception, error) {
-	sql, args, err := psq.
-		Select(
-			"r.id",
-			"r.date_time",
-			"r.pvz_id",
-			"s.name").
-		From("receptions r").
-		Join("statuses s ON r.status_id = s.id").
-		Where(sq.Eq{"r.id": ID.String()}).
+	sql, args, err := baseReceptionsSelector.
+		Where(sq.Eq{"r.id": ID}).
 		ToSql()
 
 	var r dto.Reception
@@ -103,17 +104,42 @@ func (repo *ReceptionsRepo) GetById(ID uuid.UUID) (dto.Reception, error) {
 
 	row := repo.DB.QueryRow(sql, args...)
 
-	err = row.Scan(
-		&r.Id,
-		&r.DateTime,
-		&r.PvzId,
-		&r.Status)
+	err = row.Scan(&r.Id, &r.DateTime, &r.PvzId, &r.Status)
 
 	if err != nil {
 		return r, err
 	}
 	log.Println("Pvz found: ", r)
 	return r, nil
+}
+
+func (repo *ReceptionsRepo) GetByIds(IDs []uuid.UUID) ([]dto.Reception, error) {
+	sql, args, err := baseReceptionsSelector.
+		Where(sq.Eq{"r.id": IDs}).
+		ToSql()
+
+	var receptions []dto.Reception
+
+	if err != nil {
+		log.Println(err)
+		return receptions, err
+	}
+
+	rows, err := repo.DB.Query(sql, args...)
+	if err != nil {
+		return receptions, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var r dto.Reception
+		if err := rows.Scan(&r.Id, &r.DateTime, &r.PvzId, &r.Status); err != nil {
+			return receptions, err
+		}
+		receptions = append(receptions, r)
+	}
+
+	return receptions, nil
 }
 
 func (repo *ReceptionsRepo) GetOpened(pvzID uuid.UUID) (dto.Reception, error) {
@@ -125,14 +151,7 @@ func (repo *ReceptionsRepo) GetClosed(pvzID uuid.UUID) (dto.Reception, error) {
 }
 
 func (repo *ReceptionsRepo) getByStatus(pvzID uuid.UUID, status ReceptionStatus) (dto.Reception, error) {
-	sql, args, err := psq.
-		Select(
-			"r.id",
-			"r.date_time",
-			"r.pvz_id",
-			"s.name").
-		From("receptions r").
-		Join("statuses s ON r.status_id = s.id").
+	sql, args, err := baseReceptionsSelector.
 		Where(sq.And{
 			sq.Eq{"r.pvz_id": pvzID.String()},
 			sq.Eq{"s.id": status},

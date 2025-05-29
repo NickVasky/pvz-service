@@ -87,8 +87,53 @@ func (s *DefaultAPIServicerImpl) LoginPost(ctx context.Context, r dto.LoginPostR
 }
 
 func (s *DefaultAPIServicerImpl) PvzGet(ctx context.Context, startDate time.Time, endDate time.Time, page int32, limit int32) (dto.ImplResponse, error) {
+	if page <= 0 {
+		return responseErr{
+			Message: "Page number should be > 0!",
+			code:    http.StatusUnprocessableEntity,
+			err:     nil,
+		}.handle()
+	}
+	if limit <= 0 {
+		return responseErr{
+			Message: "Limit number should be > 0!",
+			code:    http.StatusUnprocessableEntity,
+			err:     nil,
+		}.handle()
+	}
+
+	products, err := s.Repo.Products.GetPageByDate(startDate, endDate, uint64(limit), uint64((page-1)*limit))
+	if err != nil {
+		return responseErr{
+			Message: "Error!",
+			code:    http.StatusInternalServerError,
+			err:     err,
+		}.handle()
+	}
+
+	receptionIDs := getUniqueReceptions(products)
+	receptions, err := s.Repo.Receptions.GetByIds(receptionIDs)
+	if err != nil {
+		return responseErr{
+			Message: "Error!",
+			code:    http.StatusInternalServerError,
+			err:     err,
+		}.handle()
+	}
+
+	pvzIDs := getUniquePvzs(receptions)
+	pvzs, err := s.Repo.Pvzs.GetByIds(pvzIDs)
+	if err != nil {
+		return responseErr{
+			Message: "Error!",
+			code:    http.StatusInternalServerError,
+			err:     err,
+		}.handle()
+	}
+	response := buildPvzGetResponse(pvzs, receptions, products)
+
 	return dto.ImplResponse{
-		Body: "pvz (get)",
+		Body: response,
 		Code: http.StatusOK,
 	}, nil
 }
