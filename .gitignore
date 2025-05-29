@@ -4,3 +4,5 @@ _postgres
 *.session.sql
 todo.md
 codegen/README.md
+codegen/.openapi-generator
+codegen/api
