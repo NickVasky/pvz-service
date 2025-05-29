@@ -6,3 +6,8 @@ todo.md
 codegen/README.md
 codegen/.openapi-generator
 codegen/api
+repo/squirrel_test.go
+repo/user_test.go
+cmd/app_test.go
+config/app.env
+security/auth_test.go
