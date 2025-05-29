@@ -11,9 +11,58 @@ import (
 	"github.com/google/uuid"
 )
 
-//const secret string = "I'm the KEY!"
-
 var secret []byte = []byte("the-MOST-secret-KEY-in-the-WORLD!")
+
+type Role string
+
+const (
+	moderatorRole Role = "moderator"
+	clientRole    Role = "client"
+)
+
+type endpointAccessOpts struct {
+	isProtected bool
+	roles       []Role
+}
+
+var endpointAccess = map[string]endpointAccessOpts{
+	"DummyLoginPost": {
+		isProtected: false,
+		roles:       []Role{},
+	},
+	"RegisterPost": {
+		isProtected: false,
+		roles:       []Role{},
+	},
+	"LoginPost": {
+		isProtected: false,
+		roles:       []Role{},
+	},
+	"PvzGet": {
+		isProtected: true,
+		roles:       []Role{clientRole, moderatorRole},
+	},
+	"PvzPost": {
+		isProtected: true,
+		roles:       []Role{moderatorRole},
+	},
+	"PvzPvzIdCloseLastReceptionPost": {
+		isProtected: true,
+		roles:       []Role{clientRole},
+	},
+	"PvzPvzIdDeleteLastProductPost": {
+		isProtected: true,
+		roles:       []Role{clientRole},
+	},
+	"ReceptionsPost": {
+		isProtected: true,
+		roles:       []Role{clientRole},
+	},
+	"ProductsPost": {
+		isProtected: true,
+		roles:       []Role{clientRole},
+	},
+}
 
 type UserClaims struct {
 	UserID string `json:"user_id"`
@@ -73,9 +122,8 @@ func jwtKeyFunc(token *jwt.Token) (interface{}, error) {
 	return secret, nil
 }
 
-func AuthMiddleware(next http.HandlerFunc, allowedRoles []string) http.HandlerFunc {
+func AuthMiddleware(next http.Handler, allowedRoles []Role) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Example: Check for a valid Authorization header
 		authHeader := r.Header.Get("Authorization")
 
 		if authHeader == "" {
@@ -95,7 +143,7 @@ func AuthMiddleware(next http.HandlerFunc, allowedRoles []string) http.HandlerFu
 		}
 		isAllowed := false
 		for i := range allowedRoles {
-			if claims.Role == allowedRoles[i] {
+			if claims.Role == string(allowedRoles[i]) {
 				isAllowed = true
 				break
 			}
