@@ -23,8 +23,8 @@ type Repo struct {
 	Tx           txController
 }
 
-func NewRepo(db *sql.DB) Repo {
-	return Repo{
+func NewRepo(db *sql.DB) *Repo {
+	return &Repo{
 		Users:        UserRepo{DB: db},
 		Roles:        RoleRepo{DB: db},
 		Cities:       CityRepo{DB: db},

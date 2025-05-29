@@ -3,3 +3,4 @@ openapitools.json
 _postgres
 *.session.sql
 todo.md
+codegen/README.md

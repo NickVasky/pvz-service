@@ -3,6 +3,7 @@ package service
 import (
 	"AvitoTechPVZ/codegen/dto"
 	"AvitoTechPVZ/repo"
+	"AvitoTechPVZ/security"
 	"context"
 	"database/sql"
 	"errors"
@@ -28,8 +29,9 @@ type DefaultAPIServicer interface {
 }
 */
 
-type DefaultAPIServicerImpl struct {
-	Repo repo.Repo
+type defaultAPIServicerImpl struct {
+	Repo               *repo.Repo
+	SecurityController *security.SecurityController
 }
 
 var allowedRoles = map[string]bool{
@@ -43,6 +45,13 @@ type responseErr struct {
 	err     error
 }
 
+func NewDefaultAPIServicerImpl(r *repo.Repo, s *security.SecurityController) *defaultAPIServicerImpl {
+	return &defaultAPIServicerImpl{
+		Repo:               r,
+		SecurityController: s,
+	}
+}
+
 func (e responseErr) handle() (dto.ImplResponse, error) {
 	pc, _, _, ok := runtime.Caller(1)
 	funcName := "unknown"
@@ -54,7 +63,7 @@ func (e responseErr) handle() (dto.ImplResponse, error) {
 	return dto.Response(e.code, e), nil
 }
 
-func (s *DefaultAPIServicerImpl) DummyLoginPost(ctx context.Context, r dto.DummyLoginPostRequest) (dto.ImplResponse, error) {
+func (s *defaultAPIServicerImpl) DummyLoginPost(ctx context.Context, r dto.DummyLoginPostRequest) (dto.ImplResponse, error) {
 	// Implement your business logic here
 	if _, ok := allowedRoles[r.Role]; !ok {
 		return responseErr{
@@ -63,8 +72,8 @@ func (s *DefaultAPIServicerImpl) DummyLoginPost(ctx context.Context, r dto.Dummy
 		}.handle()
 	}
 
-	userClaims := NewDummyUser(r.Role)
-	token := userClaims.GenerateJwtToken()
+	userClaims := security.NewDummyUser(r.Role)
+	token := s.SecurityController.GenerateJwtToken(userClaims)
 
 	return dto.ImplResponse{
 		Body: token,
@@ -72,21 +81,21 @@ func (s *DefaultAPIServicerImpl) DummyLoginPost(ctx context.Context, r dto.Dummy
 	}, nil
 }
 
-func (s *DefaultAPIServicerImpl) RegisterPost(ctx context.Context, r dto.RegisterPostRequest) (dto.ImplResponse, error) {
+func (s *defaultAPIServicerImpl) RegisterPost(ctx context.Context, r dto.RegisterPostRequest) (dto.ImplResponse, error) {
 	return dto.ImplResponse{
 		Body: "register",
 		Code: http.StatusOK,
 	}, nil
 }
 
-func (s *DefaultAPIServicerImpl) LoginPost(ctx context.Context, r dto.LoginPostRequest) (dto.ImplResponse, error) {
+func (s *defaultAPIServicerImpl) LoginPost(ctx context.Context, r dto.LoginPostRequest) (dto.ImplResponse, error) {
 	return dto.ImplResponse{
 		Body: "login",
 		Code: http.StatusOK,
 	}, nil
 }
 
-func (s *DefaultAPIServicerImpl) PvzGet(ctx context.Context, startDate time.Time, endDate time.Time, page int32, limit int32) (dto.ImplResponse, error) {
+func (s *defaultAPIServicerImpl) PvzGet(ctx context.Context, startDate time.Time, endDate time.Time, page int32, limit int32) (dto.ImplResponse, error) {
 	if page <= 0 {
 		return responseErr{
 			Message: "Page number should be > 0!",
@@ -138,7 +147,7 @@ func (s *DefaultAPIServicerImpl) PvzGet(ctx context.Context, startDate time.Time
 	}, nil
 }
 
-func (s *DefaultAPIServicerImpl) PvzPost(ctx context.Context, pvz dto.Pvz) (dto.ImplResponse, error) {
+func (s *defaultAPIServicerImpl) PvzPost(ctx context.Context, pvz dto.Pvz) (dto.ImplResponse, error) {
 	pvzId, err := uuid.Parse(pvz.Id)
 	if err != nil {
 		return responseErr{
@@ -193,7 +202,7 @@ func (s *DefaultAPIServicerImpl) PvzPost(ctx context.Context, pvz dto.Pvz) (dto.
 	}, nil
 }
 
-func (s *DefaultAPIServicerImpl) PvzPvzIdCloseLastReceptionPost(ctx context.Context, pvzIdParam string) (dto.ImplResponse, error) {
+func (s *defaultAPIServicerImpl) PvzPvzIdCloseLastReceptionPost(ctx context.Context, pvzIdParam string) (dto.ImplResponse, error) {
 	pvzId, err := uuid.Parse(pvzIdParam)
 	if err != nil {
 		return responseErr{
@@ -258,7 +267,7 @@ func (s *DefaultAPIServicerImpl) PvzPvzIdCloseLastReceptionPost(ctx context.Cont
 	}, nil
 }
 
-func (s *DefaultAPIServicerImpl) PvzPvzIdDeleteLastProductPost(ctx context.Context, pvzIdParam string) (dto.ImplResponse, error) {
+func (s *defaultAPIServicerImpl) PvzPvzIdDeleteLastProductPost(ctx context.Context, pvzIdParam string) (dto.ImplResponse, error) {
 	pvzUUID, err := uuid.Parse(pvzIdParam)
 	if err != nil {
 		return responseErr{
@@ -289,7 +298,7 @@ func (s *DefaultAPIServicerImpl) PvzPvzIdDeleteLastProductPost(ctx context.Conte
 	}, nil
 }
 
-func (s *DefaultAPIServicerImpl) ReceptionsPost(ctx context.Context, r dto.ReceptionsPostRequest) (dto.ImplResponse, error) {
+func (s *defaultAPIServicerImpl) ReceptionsPost(ctx context.Context, r dto.ReceptionsPostRequest) (dto.ImplResponse, error) {
 	pvzUUID, err := uuid.Parse(r.PvzId)
 	if err != nil {
 		return responseErr{
@@ -340,7 +349,7 @@ func (s *DefaultAPIServicerImpl) ReceptionsPost(ctx context.Context, r dto.Recep
 	}, nil
 }
 
-func (s *DefaultAPIServicerImpl) ProductsPost(ctx context.Context, r dto.ProductsPostRequest) (dto.ImplResponse, error) {
+func (s *defaultAPIServicerImpl) ProductsPost(ctx context.Context, r dto.ProductsPostRequest) (dto.ImplResponse, error) {
 	pvzUUID, err := uuid.Parse(r.PvzId)
 	if err != nil {
 		return responseErr{

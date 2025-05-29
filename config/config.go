@@ -7,8 +7,9 @@ import (
 )
 
 type AppConfig struct {
-	Host string `env:"APP_HOST"`
-	Port string `env:"APP_PORT"`
+	Host   string `env:"APP_HOST"`
+	Port   string `env:"APP_PORT"`
+	Secret string `env:"APP_SECRET"`
 }
 
 type DbConfig struct {

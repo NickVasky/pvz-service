@@ -1,9 +1,10 @@
-package service
+package security
 
 import (
 	"AvitoTechPVZ/repo"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -11,7 +12,8 @@ import (
 	"github.com/google/uuid"
 )
 
-var secret []byte = []byte("the-MOST-secret-KEY-in-the-WORLD!")
+// TODO: store secret in env?
+//var secret []byte = []byte("the-MOST-secret-KEY-in-the-WORLD!")
 
 type Role string
 
@@ -20,12 +22,12 @@ const (
 	clientRole    Role = "client"
 )
 
-type endpointAccessOpts struct {
+type endpointAccessRule struct {
 	isProtected bool
 	roles       []Role
 }
 
-var endpointAccess = map[string]endpointAccessOpts{
+var endpointAccessRules = map[string]endpointAccessRule{
 	"DummyLoginPost": {
 		isProtected: false,
 		roles:       []Role{},
@@ -70,6 +72,19 @@ type UserClaims struct {
 	jwt.RegisteredClaims
 }
 
+type SecurityController struct {
+	secret []byte
+}
+
+func NewSecurityController(key string) *SecurityController {
+	return &SecurityController{secret: []byte(key)}
+}
+
+func (s *SecurityController) getSecret() []byte {
+	log.Printf("Secret requested: %v", s.secret)
+	return s.secret
+}
+
 func NewUserClaims(user repo.User, role repo.Role) UserClaims {
 	return UserClaims{
 		UserID: user.Id.String(),
@@ -87,9 +102,9 @@ func NewDummyUser(roleName string) UserClaims {
 	return NewUserClaims(user, role)
 }
 
-func (c UserClaims) GenerateJwtToken() string {
+func (s *SecurityController) GenerateJwtToken(c UserClaims) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
-	signedToken, err := token.SignedString(secret)
+	signedToken, err := token.SignedString(s.getSecret())
 	if err != nil {
 		panic(err)
 	}
@@ -97,11 +112,11 @@ func (c UserClaims) GenerateJwtToken() string {
 	return signedToken
 }
 
-func ParseUserToken(token string) (*UserClaims, error) {
+func (s *SecurityController) ParseUserToken(token string) (*UserClaims, error) {
 	validMethods := []string{"HS256"}
 	claims := &UserClaims{}
 
-	parsedToken, err := jwt.ParseWithClaims(token, claims, jwtKeyFunc, jwt.WithValidMethods(validMethods))
+	parsedToken, err := jwt.ParseWithClaims(token, claims, s.jwtKeyFunc, jwt.WithValidMethods(validMethods))
 
 	if err != nil {
 		return nil, err
@@ -114,16 +129,28 @@ func ParseUserToken(token string) (*UserClaims, error) {
 
 }
 
-func jwtKeyFunc(token *jwt.Token) (interface{}, error) {
+func (s *SecurityController) jwtKeyFunc(token *jwt.Token) (interface{}, error) {
 	// Ensure the signing method is correct
 	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 		return nil, errors.New("unexpected signing method")
 	}
-	return secret, nil
+	return s.getSecret(), nil
 }
 
-func AuthMiddleware(next http.Handler, allowedRoles []Role) http.Handler {
+func (s *SecurityController) AuthMiddleware(inner http.Handler, endpointName string) http.Handler {
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		endpointAccess, ok := endpointAccessRules[endpointName]
+		if !ok {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		// skip auth
+		if !endpointAccess.isProtected {
+			inner.ServeHTTP(w, r)
+		}
+
+		allowedRoles := endpointAccess.roles
 		authHeader := r.Header.Get("Authorization")
 
 		if authHeader == "" {
@@ -136,7 +163,7 @@ func AuthMiddleware(next http.Handler, allowedRoles []Role) http.Handler {
 			return
 		}
 		token := authHeaderParts[1]
-		claims, err := ParseUserToken(token)
+		claims, err := s.ParseUserToken(token)
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
@@ -154,6 +181,6 @@ func AuthMiddleware(next http.Handler, allowedRoles []Role) http.Handler {
 			return
 		}
 
-		next.ServeHTTP(w, r)
+		inner.ServeHTTP(w, r)
 	})
 }
