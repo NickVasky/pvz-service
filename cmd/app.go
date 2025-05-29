@@ -19,7 +19,10 @@ func main() {
 	}
 
 	// Create service
-	db := repo.OpenDbConnection(cfg.Db)
+	db, err := repo.NewDbConn(cfg.Db)
+	if err != nil {
+		log.Fatal(err)
+	}
 	// TODO: defer close
 	repo := repo.NewRepo(db)
 	s := &service.DefaultAPIServicerImpl{
