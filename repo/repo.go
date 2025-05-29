@@ -47,14 +47,14 @@ type txController struct {
 	DB *sql.DB
 }
 
-func OpenDbConnection(cfg cfg.DbConfig) *sql.DB {
+func NewDbConn(cfg cfg.DbConfig) (*sql.DB, error) {
 	connectionString := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DbName, cfg.DbSslMode)
 
-	db, err := sql.Open("postgres", connectionString)
-	if err != nil {
-		panic(err)
-	}
-	return db
+	return sql.Open("postgres", connectionString)
+}
+
+func CloseDbConn(db *sql.DB) error {
+	return db.Close()
 }
