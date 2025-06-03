@@ -4,6 +4,7 @@ import (
 	cfg "AvitoTechPVZ/config"
 	"database/sql"
 	"fmt"
+	"log"
 
 	sq "github.com/Masterminds/squirrel"
 	_ "github.com/lib/pq"
@@ -48,6 +49,7 @@ type txController struct {
 }
 
 func NewDbConn(cfg cfg.DbConfig) (*sql.DB, error) {
+	log.Println("Opening DB Connection...")
 	connectionString := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DbName, cfg.DbSslMode)
@@ -56,5 +58,6 @@ func NewDbConn(cfg cfg.DbConfig) (*sql.DB, error) {
 }
 
 func CloseDbConn(db *sql.DB) error {
+	log.Println("Closing DB Connection...")
 	return db.Close()
 }
